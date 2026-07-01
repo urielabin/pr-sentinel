@@ -4,8 +4,9 @@ author: "Uriel Abín"
 
 inputs:
   anthropic-api-key:
-    description: "Anthropic API key used to run the review crew"
-    required: true
+    description: "Anthropic API key used to run the review crew. If empty, the action skips without error."
+    required: false
+    default: ""
   github-token:
     description: "Token used to read the PR diff and post the review comment"
     required: false
@@ -24,10 +25,12 @@ runs:
         python-version: "3.12"
 
     - name: Install PR Sentinel
+      if: ${{ inputs.anthropic-api-key != '' }}
       shell: bash
       run: pip install "${{ github.action_path }}"
 
     - name: Run review
+      if: ${{ inputs.anthropic-api-key != '' }}
       shell: bash
       env:
         ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
@@ -36,6 +39,11 @@ runs:
         GITHUB_EVENT_PATH: ${{ github.event_path }}
         PR_SENTINEL_MODEL: ${{ inputs.model }}
       run: python -m pr_sentinel.main
+
+    - name: Skip (no API key provided)
+      if: ${{ inputs.anthropic-api-key == '' }}
+      shell: bash
+      run: echo "No anthropic-api-key provided — skipping PR Sentinel review."
 
 branding:
   icon: "shield"
