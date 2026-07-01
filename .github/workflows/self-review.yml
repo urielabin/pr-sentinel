@@ -1,0 +1,19 @@
+name: Self Review (dogfood)
+
+# Runs PR Sentinel on its own pull requests, using the local action (`uses: ./`).
+# Skips entirely until an ANTHROPIC_API_KEY secret is added to this repo — no
+# key, no cost, no failing CI in the meantime.
+
+on:
+  pull_request:
+
+jobs:
+  review:
+    if: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}

@@ -1,0 +1,42 @@
+name: "PR Sentinel"
+description: "Multi-agent AI code review — summarizes changes and flags risk/test-coverage gaps on pull requests"
+author: "Uriel Abín"
+
+inputs:
+  anthropic-api-key:
+    description: "Anthropic API key used to run the review crew"
+    required: true
+  github-token:
+    description: "Token used to read the PR diff and post the review comment"
+    required: false
+    default: ${{ github.token }}
+  model:
+    description: "LiteLLM-style model string passed to CrewAI (e.g. anthropic/claude-sonnet-5)"
+    required: false
+    default: "anthropic/claude-sonnet-5"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install PR Sentinel
+      shell: bash
+      run: pip install "${{ github.action_path }}"
+
+    - name: Run review
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic-api-key }}
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_EVENT_PATH: ${{ github.event_path }}
+        PR_SENTINEL_MODEL: ${{ inputs.model }}
+      run: python -m pr_sentinel.main
+
+branding:
+  icon: "shield"
+  color: "purple"
